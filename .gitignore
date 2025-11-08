@@ -1,0 +1,44 @@
+# === Java build files ===
+*.class
+*.jar
+*.war
+*.ear
+
+# === Build directories ===
+out/
+bin/
+build/
+target/
+
+# === IDE / Editor files ===
+# VS Code
+.vscode/
+# IntelliJ / IDEA
+.idea/
+*.iml
+# Eclipse
+.project
+.classpath
+.settings/
+# NetBeans
+nbproject/
+
+# === OS-generated files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs and backups ===
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# === Zip submissions ===
+*.zip
+
+# === Others ===
+# Ignore compiled outputs but not source
+!/src/
+!/README.md
