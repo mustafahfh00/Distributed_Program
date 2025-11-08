@@ -221,10 +221,3 @@ This project demonstrates distributed communication and causal message ordering 
 | **7. Termination** | Main sends `DONE` to all workers | P0 → P1–P6 |
 
 ---
-
-💡 **Tip:**  
-You can take a screenshot of this diagram (or draw a similar one in draw.io or Lucidchart) for your Moodle PDF report — it looks clear, structured, and professional.
-
----
-
-Would you like me to create a **digital (graphical) version** of this diagram (in draw.io / mermaid style) so you can embed it visually on GitHub or export it for your report PDF?
