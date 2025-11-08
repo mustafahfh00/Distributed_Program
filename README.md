@@ -1,10 +1,10 @@
 📘 README.md
 # SE355 – Assignment 1  
 **Course:** Distributed Systems (SE 355)  
-**Instructor:** Ajay / AUIS  
+**Instructor:** Yad Tahir / AUIS  
 **Students:**  
-- [Your Full Name] – [your-email@auis.edu.krd]  
-- [Partner’s Full Name] – [partner-email@auis.edu.krd]  
+- Mustafa Haitham Fadhil – mh22197@auis.edu.krd  
+- Hajeen –  
 
 ---
 
