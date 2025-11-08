@@ -35,7 +35,7 @@ The system launches **seven processes**:
 
 ## 🗂️ Project Structure
 
-```markdown
+
 ```text
 assignment1/
 ├── src/
