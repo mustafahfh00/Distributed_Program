@@ -35,19 +35,20 @@ The system launches **seven processes**:
 
 ## 🗂️ Project Structure
 
-
-
+```markdown
+```text
 assignment1/
 ├── src/
-│ ├── Message.java # Serializable message structure
-│ ├── VectorClock.java # Implements vector-clock logic
-│ ├── NetUtil.java # Utility for sending objects via sockets
-│ ├── ProcessNode.java # Abstract base class for all processes
-│ ├── WorkerProcess.java # Logic for worker nodes (P1–P6)
-│ ├── MainProcess.java # Main controller node (P0)
-│ └── RunAll.java # Launches all 7 processes
+│   ├── Message.java          # Serializable message structure
+│   ├── VectorClock.java      # Implements vector-clock logic
+│   ├── NetUtil.java          # Utility for sending objects via sockets
+│   ├── ProcessNode.java      # Abstract base class for all processes
+│   ├── WorkerProcess.java    # Logic for worker nodes (P1–P6)
+│   ├── MainProcess.java      # Main controller node (P0)
+│   └── RunAll.java           # Launches all 7 processes
 ├── .gitignore
 └── README.md
+
 
 
 ---
