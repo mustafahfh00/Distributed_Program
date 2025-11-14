@@ -5,7 +5,7 @@
 #
 # Authors:
 #   Mustafa Haitham Fadhil <mh22197@auis.edu.krd>
-#   <Partner Name> <partner@auis.edu.krd>
+#   Hazhin Noori Mahmood <hn22045@auis.edu.krd>
 # Instructor: Yad Tahir
 # ====================================================================
 

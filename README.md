@@ -7,7 +7,7 @@
 https://github.com/mustafahfh00/Distributed_Program.git
 
 - **Mustafa Haitham Fadhil** — mh22197@auis.edu.krd
-- **<Partner Name>** — <partner@auis.edu.krd>
+- **Hazhin Noori Mahmood ** — hn22045@auis.edu.krd
 
 ---
 
@@ -126,7 +126,7 @@ Kshemkalyani, A.D. & Singhal, M. Distributed Computing: Principles, Algorithms, 
 
 Course Materials
 
-SE355 Notebook (Provided by AUIS)
+SE355 Notebook:
 
 Lecture 7 — Networking
 
@@ -138,7 +138,7 @@ Lecture 13 — Partial Order
 
 Lecture 15–17 — Logical & Vector Clocks
 
-ITE306 Notebook
+ITE306 Notebook:
 
 Process creation, shell scripting, system calls
 
