@@ -1,68 +1,169 @@
 package assignment1;
 
+import java.net.ServerSocket;
+import java.util.Map;
+import java.util.Scanner;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-
+/**
+ * MainProcess (P0)
+ * ------------------------------------------------------------
+ * Responsibilities:
+ *  - Prompt user for a paragraph
+ *  - Distribute each word to a random worker (P1–P6)
+ *  - Wait 15 seconds
+ *  - Collect all returned words
+ *  - Reconstruct the original paragraph in correct order
+ *
+ * Clean Architecture:
+ *  - WordDistributor handles splitting + randomness
+ *  - WordCollector stores sorted results
+ *  - MainProcess only coordinates high-level behavior
+ *
+ * References:
+ *  - SE355 Notebook Lectures 11–17 (Causality, Vector Clocks)
+ *  - Kshemkalyani & Singhal, Ch. 3 (Vector Time)
+ *  - Java Network Programming (Harold), Ch. 8–9 (Object Streams)
+ */
 public class MainProcess extends ProcessNode {
-    private final String paragraph;
-    private final String[] words;
-    private final Map<Integer,String> collected = new HashMap<>();
-    private final Random rnd = new Random();
 
-    public MainProcess(String paragraph) throws IOException {
-        super(0);
-        System.out.println("[P" + id + "] " + "listening on port " + (basePort + id));
+    private final WordDistributor distributor = new WordDistributor();
+    private final WordCollector collector = new WordCollector();
 
-        this.paragraph = paragraph.trim();
-        this.words = this.paragraph.split("\\s+");
+    public MainProcess() {
+        super(0, 7); // Main is P0 in a 7-process system
     }
 
-    @Override
-    protected void onDeliver(Message m) throws Exception {
-        if (m.type == Message.Type.RETURN_WORD) {
-            collected.put(m.wordIndex, m.payload);
+    /** Entry point: coordinates the entire workflow. */
+    public void run() throws Exception {
+        String paragraph = promptUserForParagraph();
+        String[] words = distributor.extractWords(paragraph);
+
+        distributeWords(words);
+
+        waitBeforeCollecting();
+
+        sendCollectRequests();
+
+        collectResponses();
+
+        printReconstructedParagraph();
+    }
+
+    // ------------------------------------------------------------
+    // 1. USER INPUT
+    // ------------------------------------------------------------
+    private String promptUserForParagraph() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a paragraph: ");
+        return sc.nextLine();
+    }
+
+    // ------------------------------------------------------------
+    // 2. DISTRIBUTION PHASE
+    // ------------------------------------------------------------
+    private void distributeWords(String[] words) throws Exception {
+        for (int index = 0; index < words.length; index++) {
+            String word = words[index];
+            int workerId = distributor.chooseRandomWorker();
+
+            incrementClock(); // local event
+            Message msg = new Message(
+                    Message.Type.DATA,
+                    word,
+                    id,
+                    clock.copy(),
+                    index
+            );
+
+            NetUtil.send("localhost", 5000 + workerId, msg);
+
+            log("sent '" + word + "' (index " + index + ") to P" + workerId);
         }
     }
 
-    public void runScenario() throws Exception {
-        startReceiver();
+    // ------------------------------------------------------------
+    // 3. DELAY PHASE
+    // ------------------------------------------------------------
+    private void waitBeforeCollecting() {
+        System.out.println("\n⏳ Waiting 15 seconds before collection...");
+        try {
+            Thread.sleep(15000);
+        } catch (InterruptedException ignored) {}
+    }
 
-        // 1) Randomly distribute words to 6 workers (ids 1..6)
-        for (int i = 0; i < words.length; i++) {
-            int worker = 1 + ThreadLocalRandom.current().nextInt(6);
-            sendMsg(worker, Message.Type.WORD, i, words[i]); // TCP gives FIFO per-sender; causal hold-back enforces HB. :contentReference[oaicite:7]{index=7}
+    // ------------------------------------------------------------
+    // 4. COLLECT REQUESTS
+    // ------------------------------------------------------------
+    private void sendCollectRequests() throws Exception {
+        for (int workerId = 1; workerId <= 6; workerId++) {
+            incrementClock();
+
+            Message request = new Message(
+                    Message.Type.COLLECT,
+                    "",
+                    id,
+                    clock.copy(),
+                    -1
+            );
+
+            NetUtil.send("localhost", 5000 + workerId, request);
+
+            log("sent COLLECT to P" + workerId);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5. RECEIVE RESPONSES
+    // ------------------------------------------------------------
+    private void collectResponses() throws Exception {
+        try (ServerSocket server = openServer()) {
+            server.setSoTimeout(12000);  // max wait 12 seconds
+            long endTime = System.currentTimeMillis() + 12000;
+
+            while (System.currentTimeMillis() < endTime) {
+                try {
+                    Message resp = NetUtil.receive(server);
+
+                    // merge vector clock
+                    clock.update(resp.getVectorClock());
+                    incrementClock();
+
+                    collector.store(resp.getIndex(), resp.getContent());
+
+                    log("received '" + resp.getContent() +
+                        "' (index " + resp.getIndex() +
+                        ") from P" + resp.getFromId());
+
+                } catch (Exception ignored) {
+                    // timeout or worker not ready → skip and continue
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 6. OUTPUT
+    // ------------------------------------------------------------
+    private void printReconstructedParagraph() {
+        System.out.println("\n🧾 Reconstructed paragraph:");
+
+        Map<Integer, String> received = collector.getAll();
+
+        if (received.isEmpty()) {
+            System.out.println("(No words received — check timing or ports)");
+            return;
         }
 
-        // 2) Wait 15 seconds
-        Thread.sleep(15_000);
-
-        // 3) Ask all workers to COLLECT (flush back)
-        for (int w = 1; w <= 6; w++) sendMsg(w, Message.Type.COLLECT, -1, "flush");
-
-        // 4) Wait until all words are collected (or timeout safeguard)
-        long deadline = System.currentTimeMillis() + 10_000;
-        while (collected.size() < words.length && System.currentTimeMillis() < deadline) {
-            Message m = inbox.poll();
-            if (m != null) onDeliver(m); else Thread.sleep(5);
+        for (String word : received.values()) {
+            System.out.print(word + " ");
         }
+        System.out.println();
+    }
 
-        // 5) Sort by original index and print
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            String w = collected.get(i);
-            if (w == null) w = words[i]; // fallback
-            if (i > 0) sb.append(' ');
-            sb.append(w);
-        }
-        System.out.println("Original paragraph (reconstructed):");
-        System.out.println(sb.toString());
-
-        // Optional: tell workers to stop
-        for (int w = 1; w <= 6; w++) sendMsg(w, Message.Type.DONE, -1, "bye");
-        running = false;
-        server.close();
+    // ------------------------------------------------------------
+    // MAIN ENTRY
+    // ------------------------------------------------------------
+    public static void main(String[] args) throws Exception {
+        new MainProcess().run();
     }
 }
-
