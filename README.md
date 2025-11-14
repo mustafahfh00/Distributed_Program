@@ -97,6 +97,18 @@ Compile all .java files
 Run RunAll.java
 
 Launch P1–P6 workers and then P0
+
+⚠️ Note About build.sh Not Running
+
+If build.sh fails to execute, the cause is usually Windows-style line endings (CRLF).
+WSL and Linux require Unix-style line endings (LF) for shell scripts.
+
+To fix this, run:
+
+sed -i 's/\r$//' build.sh
+chmod +x build.sh
+./build.sh
+
 ```
 
 Time → -------------------------------------------------->
